@@ -13,11 +13,5 @@ services:
         value: 3.12.8
       - key: DISABLE_EXTRACT
         value: "1"
-      - key: REQUIRE_ACCESS_AUTH
-        value: "1"
-      - key: ACCESS_USERNAME
-        value: owner
-      - key: ACCESS_PASSWORD
-        sync: false
       - key: DEEPSEEK_KEY
         sync: false
