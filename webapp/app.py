@@ -143,6 +143,8 @@ async def extract_api(req: Request):
 @app.get("/api/douyin_status")
 async def douyin_status():
     """抖音登录态：给前端右下角小按钮显示用。"""
+    if os.getenv("DISABLE_EXTRACT"):
+        return {"success": True, "logged_in": False, "enabled": False}
     import extract as _ext
     return JSONResponse({"success": True, "logged_in": _ext._is_logged_in()})
 
@@ -285,7 +287,8 @@ def chatlog_clear(frame: str = "pre"):
 def settings_get():
     import config
     return {"success": True, "data": {"deepseek": bool(config.get_key("deepseek")),
-                                      "bailian": bool(config.get_key("bailian"))}}
+                                      "bailian": bool(config.get_key("bailian")),
+                                      "extract_enabled": not bool(os.getenv("DISABLE_EXTRACT"))}}
 
 
 @app.post("/api/settings")

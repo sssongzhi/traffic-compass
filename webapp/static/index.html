@@ -650,6 +650,10 @@ async function resetAll(){
 async function checkSettings(){
   try{
     const j=await fetch("/api/settings").then(r=>r.json());
+    if(j.success && !j.data.extract_enabled){
+      if(!j.data.deepseek) add("bot","请在 Render 环境变量中配置 DEEPSEEK_KEY，保存并重新部署后即可使用文案审核。",true);
+      return;
+    }
     if(j.success && (!j.data.deepseek || !j.data.bailian)){
       window._setCard = add("bot",`<div class="accform"><b>🔑 首次使用：配好这三样才能用</b>
         <div style="color:var(--dim);font-size:12.5px;margin-top:6px;line-height:1.8">钥匙和登录都只存在你自己电脑里，不会上传给任何人。<br>
@@ -681,6 +685,7 @@ async function refreshDouyin(){
   const el=document.getElementById("dyChip"); if(!el) return;
   try{
     const j=await fetch("/api/douyin_status").then(r=>r.json());
+    if(j.enabled===false){ el.style.display="none"; return; }
     if(j.logged_in){ el.textContent="抖音：已登录 ✓"; el.classList.add("ok"); }
     else{ el.textContent="抖音：未登录 · 点我扫码"; el.classList.remove("ok"); }
   }catch(e){}
