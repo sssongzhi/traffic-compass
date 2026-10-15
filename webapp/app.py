@@ -3,6 +3,7 @@ v1 文字版：/api/audit 走代码引擎(确定性，无需密钥即可跑)。
 后续接：/api/extract 抖音链接→文字(复用 Pixlix 母版 douyin_parser + 百炼ASR)；DeepSeek 语境润色。
 """
 import os, json, datetime
+import base64, binascii, secrets
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +15,33 @@ STATIC = os.path.join(BASE, "static")
 RECORDS = os.path.join(os.path.dirname(BASE), "records", "records.jsonl")
 
 app = FastAPI(title="流量罗盘")
+
+ACCESS_PASSWORD = os.getenv("ACCESS_PASSWORD", "")
+ACCESS_USERNAME = os.getenv("ACCESS_USERNAME", "owner")
+if os.getenv("REQUIRE_ACCESS_AUTH") == "1" and not ACCESS_PASSWORD:
+    raise RuntimeError("Set ACCESS_PASSWORD before starting the online service")
+
+
+@app.middleware("http")
+async def require_access(request: Request, call_next):
+    if ACCESS_PASSWORD and request.url.path != "/healthz":
+        authorized = False
+        scheme, _, token = request.headers.get("authorization", "").partition(" ")
+        if scheme.lower() == "basic":
+            try:
+                username, _, password = base64.b64decode(token, validate=True).decode("utf-8").partition(":")
+                authorized = secrets.compare_digest(username.encode(), ACCESS_USERNAME.encode()) & secrets.compare_digest(password.encode(), ACCESS_PASSWORD.encode())
+            except (ValueError, UnicodeDecodeError, binascii.Error):
+                pass
+        if not authorized:
+            return JSONResponse({"detail": "Authentication required"}, status_code=401,
+                                headers={"WWW-Authenticate": 'Basic realm="Traffic Compass", charset="UTF-8"'})
+    return await call_next(request)
+
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
 
 
 def _log(rec: dict):

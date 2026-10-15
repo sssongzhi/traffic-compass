@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: traffic-compass
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: webapp
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DISABLE_EXTRACT
+        value: "1"
+      - key: REQUIRE_ACCESS_AUTH
+        value: "1"
+      - key: ACCESS_USERNAME
+        value: owner
+      - key: ACCESS_PASSWORD
+        sync: false
+      - key: DEEPSEEK_KEY
+        sync: false

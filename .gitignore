@@ -1,5 +1,7 @@
 # 密钥与隐私（务必不要提交）
 webapp/_data/apikeys.json
+webapp/_data/*.db
+webapp/_data/*.db-*
 webapp/_data/chrome_data/
 .env
 
