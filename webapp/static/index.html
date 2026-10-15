@@ -4,13 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>流量罗盘 · 发布前体检 + 发布后对账</title>
+<script>
+  let savedTheme = "light";
+  try { savedTheme = localStorage.getItem("traffic-compass-theme") || "light"; } catch(e) {}
+  document.documentElement.dataset.theme = savedTheme === "dark" ? "dark" : "light";
+</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root{
+    color-scheme:dark;
     --bg:#0a0a0b; --panel:#161618; --panel2:#1d1d20; --line:#2a2a2e;
     --text:#ececf1; --dim:#8a8a93; --accent:#5b8cff;
     --high:#ff5c5c; --mid:#ffb347; --low:#9aa0a6; --ok:#33d17a;
   }
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f5f7fa; --panel:#fff; --panel2:#edf1f6; --line:#d4dce7;
+    --text:#202b3c; --dim:#5d6b7f; --accent:#3266d5;
+    --high:#c72f3a; --mid:#925400; --low:#596579; --ok:#187446;
+  }
+  .themebar{ display:flex; justify-content:flex-end; margin-bottom:4px; }
+  .themebtn{ background:var(--panel); border:1px solid var(--line); border-radius:9px;
+    color:var(--text); padding:6px 10px; font:inherit; font-size:12px; cursor:pointer; }
+  .themebtn:hover{ border-color:var(--accent); }
+  .themebtn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
   html,body{height:100%;}
   body{ background:var(--bg); color:var(--text);
     font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
@@ -162,10 +179,27 @@
   color:#c9d1d9;padding:6px 13px;border-radius:16px;font-size:12px;cursor:pointer;user-select:none}
 .dychip:hover{background:#30363d}
 .dychip.ok{color:#3fb950;border-color:#2ea043;cursor:default}
+  [data-theme="light"] .tab.on{ background:#e6edfc; border-color:#b8cbed; }
+  [data-theme="light"] .me{ background:#e8effc; border-color:#bfceeb; }
+  [data-theme="light"] .rep h3,[data-theme="light"] .witem .wt,
+  [data-theme="light"] .pred .rng,[data-theme="light"] .accbar b,
+  [data-theme="light"] mark{ color:var(--text); }
+  [data-theme="light"] ul.weak li{ color:var(--mid); }
+  [data-theme="light"] ul.good li{ color:var(--ok); }
+  [data-theme="light"] .copybtn,[data-theme="light"] .menu{ background:var(--panel); }
+  [data-theme="light"] .menu{ box-shadow:0 12px 32px rgba(32,43,60,.12); }
+  [data-theme="light"] .clearbtn{ color:var(--dim); }
+  [data-theme="light"] .clearbtn:hover{ color:var(--high); }
+  [data-theme="light"] .wtable td{ border-color:var(--line); }
+  [data-theme="light"] .wtable tr.wrow:hover td,[data-theme="light"] .retroRow td{ background:var(--panel2); }
+  [data-theme="light"] .dychip{ background:var(--panel); border-color:var(--line); color:var(--dim); }
+  [data-theme="light"] .dychip:hover{ background:var(--panel2); }
+  [data-theme="light"] .dychip.ok{ color:var(--ok); border-color:var(--ok); }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="themebar"><button class="themebtn" id="themeToggle" type="button" onclick="toggleTheme()">☾ 深色模式</button></div>
   <div class="hd">
     <h1>🧭 流量罗盘</h1>
     <p>发布前体检预测，发布后回来对账 —— 预测准不准，有账可查</p>
@@ -226,6 +260,18 @@
 
 <script>
 const $ = s => document.querySelector(s);
+function updateThemeButton(){
+  const dark = document.documentElement.dataset.theme === "dark";
+  $("#themeToggle").textContent = dark ? "☀ 浅色模式" : "☾ 深色模式";
+  $("#themeToggle").setAttribute("aria-label", dark ? "切换到浅色模式" : "切换到深色模式");
+}
+function toggleTheme(){
+  const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem("traffic-compass-theme", theme); } catch(e) {}
+  updateThemeButton();
+}
+updateThemeButton();
 let platform = "douyin", platformName = "抖音";
 let lastReportCtx = "", chatHistory = [];
 let lastAuditText = "", lastAuditData = null, currentAccount = null;
@@ -461,8 +507,8 @@ function renderPredCard(w){
   return `<div class="rep pcard"><h3>🔮 盲预测<span class="lock">🔒 已锁定 · 不可修改</span></h3>
     ${bucketBars(w.pred_dist, w.pred_bucket)}
     <div style="color:var(--dim);font-size:13px;margin-top:8px">
-    判定：<b style="color:#fff">${esc(w.pred_bucket)}（${BUCKET_LABEL[w.pred_bucket]||""}）</b>
-    · 预计播放约 <b style="color:#fff">${fmtNum(w.pred_center)}</b> · 置信度 ${esc(w.pred_confidence)}</div>
+    判定：<b style="color:var(--text)">${esc(w.pred_bucket)}（${BUCKET_LABEL[w.pred_bucket]||""}）</b>
+    · 预计播放约 <b style="color:var(--text)">${fmtNum(w.pred_center)}</b> · 置信度 ${esc(w.pred_confidence)}</div>
     <div class="disc">${esc(w.pred_reason||"")}</div>
     <div class="disc" style="margin-top:6px">发布后切到「📊 发布后」登记 → 满3天回来对账。预测已存档，赖不掉的那种。</div></div>`;
 }
@@ -625,7 +671,7 @@ async function showReport(id, calibEvent){
     <div class="wm" style="color:var(--dim);font-size:12.5px;margin-bottom:6px">${esc(w.text_snapshot.slice(0,50))}…</div>
     ${bucketBars(w.pred_dist, w.pred_bucket, actualBucket)}
     <div class="devbig" style="color:${col}">${w.hit_bucket?"✅ 命中 "+esc(w.pred_bucket):"❌ 实际落在 "+esc(actualBucket)}</div>
-    <div style="color:var(--dim);font-size:13px">预计 ${fmtNum(w.pred_center)} → 实际 <b style="color:#fff">${fmtNum(w.actual_plays)}</b>（偏差 ${dev>0?"+":""}${dev}%）</div>
+    <div style="color:var(--dim);font-size:13px">预计 ${fmtNum(w.pred_center)} → 实际 <b style="color:var(--text)">${fmtNum(w.actual_plays)}</b>（偏差 ${dev>0?"+":""}${dev}%）</div>
     <div class="disc">当时的理由：${esc(w.pred_reason||"")}</div>
     <div class="disc">账号「${esc(w.account.name)}」累计命中 ${esc(w.account.hit_rate)} · ${esc(w.account.confidence)} · 校准系数 ${w.account.calib_factor}</div>`;
   if(calibEvent) h+=`<div class="verdict" style="margin-top:8px">⚙️ ${esc(calibEvent.note)}</div>`;
